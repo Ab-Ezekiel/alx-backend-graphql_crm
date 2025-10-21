@@ -1,10 +1,11 @@
-# alx_backend_graphql_crm/schema.py
+# alx_backend_graphql/schema.py
 import graphene
+from crm.schema import CRMQuery, Mutation as CRMMutation
 
-class Query(graphene.ObjectType):
-    # a single field 'hello' of type String that returns a default value
-    hello = graphene.String(default_value="Hello, GraphQL!")
+class Query(CRMQuery, graphene.ObjectType):
+    pass
 
-# create the schema object expected by graphene-django config
-schema = graphene.Schema(query=Query)
+class Mutation(CRMMutation, graphene.ObjectType):
+    pass
 
+schema = graphene.Schema(query=Query, mutation=Mutation)
