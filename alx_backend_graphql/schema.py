@@ -1,8 +1,7 @@
-# alx_backend_graphql/schema.py
 import graphene
+from crm.schema import CRMQuery
 
-class Query(graphene.ObjectType):
-    hello = graphene.String(default_value="Hello, GraphQL!")
+class Query(CRMQuery, graphene.ObjectType):
+    hello = graphene.String(default_value="Hello world")
 
-# create the schema object expected by graphene-django config
 schema = graphene.Schema(query=Query)
