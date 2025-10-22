@@ -7,25 +7,63 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from decimal import Decimal
 import re
 from .models import Customer, Product, Order
+from graphene import relay
+from .filters import CustomerFilter, ProductFilter, OrderFilter
+import django_filters
+from graphene_django.filter import DjangoFilterConnectionField
 
 
 # ------------------------
 # Graphene types
 # ------------------------
+# --- types should expose relay.Node for connection usage
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
-        fields = ("id", "name", "email", "phone")
+        interfaces = (relay.Node,)
+        fields = ("id", "name", "email", "phone", "created_at")
 
 class ProductType(DjangoObjectType):
     class Meta:
         model = Product
+        interfaces = (relay.Node,)
         fields = ("id", "name", "price", "stock")
 
 class OrderType(DjangoObjectType):
     class Meta:
         model = Order
+        interfaces = (relay.Node,)
         fields = ("id", "customer", "products", "total_amount", "order_date")
+
+
+# --- Query with filters
+class Query(graphene.ObjectType):
+    # connections with filterset_class
+    all_customers = DjangoFilterConnectionField(CustomerType, filterset_class=CustomerFilter, orderBy=graphene.String())
+    all_products = DjangoFilterConnectionField(ProductType, filterset_class=ProductFilter, orderBy=graphene.String())
+    all_orders = DjangoFilterConnectionField(OrderType, filterset_class=OrderFilter, orderBy=graphene.String())
+
+    # fallback simple list resolvers (Graphene will prefer DjangoFilterConnectionField behavior)
+    def resolve_all_customers(self, info, orderBy=None, **kwargs):
+        qs = Customer.objects.all()
+        # apply django-filter filtering if kwargs provided by graphene (DjangoFilterConnectionField will do this automatically),
+        # but we still support orderBy param for sorting:
+        if orderBy:
+            # allow comma-separated order fields
+            qs = qs.order_by(*[f.strip() for f in orderBy.split(",")])
+        return qs
+
+    def resolve_all_products(self, info, orderBy=None, **kwargs):
+        qs = Product.objects.all()
+        if orderBy:
+            qs = qs.order_by(*[f.strip() for f in orderBy.split(",")])
+        return qs
+
+    def resolve_all_orders(self, info, orderBy=None, **kwargs):
+        qs = Order.objects.select_related("customer").prefetch_related("products").all()
+        if orderBy:
+            qs = qs.order_by(*[f.strip() for f in orderBy.split(",")])
+        return qs
 
 # ------------------------
 # Helper functions
