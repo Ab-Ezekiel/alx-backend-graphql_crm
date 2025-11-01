@@ -1,5 +1,6 @@
 # crm/schema.py
 import graphene
+from crm.models import Product
 from graphene import relay
 from graphene_django import DjangoObjectType
 from django.db import transaction
