@@ -15,6 +15,11 @@ INSTALLED_APPS = [
     "graphene_django",
     "django_filters",
     "crm",
+    'django_crontab',
+]
+
+CRONJOBS = [
+    ('*/5 * * * *', 'crm.cron.log_crm_heartbeat'),
 ]
 
 # Graphene settings pointing at this module's schema

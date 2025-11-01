@@ -249,7 +249,29 @@ class CreateOrder(graphene.Mutation):
 # ------------------------
 # Mutation container for CRM
 # ------------------------
+
+class UpdateLowStockProductsPayload(graphene.ObjectType):
+    updated_products = graphene.List(ProductType)
+    success = graphene.Boolean()
+    message = graphene.String()
+
+class UpdateLowStockProducts(graphene.Mutation):
+    Output = UpdateLowStockProductsPayload
+
+    def mutate(self, info):
+        # find low stock products and increase stock by 10
+        low = Product.objects.filter(stock__lt=10)
+        updated = []
+        if not low.exists():
+            return UpdateLowStockProductsPayload(updated_products=[], success=True, message="No low-stock products found")
+        for p in low:
+            p.stock = p.stock + 10
+            p.save()
+            updated.append(p)
+        return UpdateLowStockProductsPayload(updated_products=updated, success=True, message=f"Updated {len(updated)} products")
+
 class Mutation(graphene.ObjectType):
+    update_low_stock_products = UpdateLowStockProducts.Field()
     create_customer = CreateCustomer.Field()
     bulk_create_customers = BulkCreateCustomers.Field()
     create_product = CreateProduct.Field()
