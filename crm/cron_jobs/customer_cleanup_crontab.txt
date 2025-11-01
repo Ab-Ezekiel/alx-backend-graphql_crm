@@ -1,0 +1,1 @@
+0 2 * * 0 /home/abraham/alx_pro_dev/alx-backend-graphql_crm/crm/cron_jobs/clean_inactive_customers.sh >> /tmp/customer_cleanup_log.txt 2>&1
